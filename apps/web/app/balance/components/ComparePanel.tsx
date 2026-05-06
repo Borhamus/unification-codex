@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Unit } from '../page'
-
+ 
 type Props = {
   unit: Unit
   compareUnit: Unit | null
@@ -9,8 +9,9 @@ type Props = {
   allUnits: Unit[]
   formatName: (name: string) => string
   categoryColor: (cat: string) => string
+  getIconUrl: (unit: Unit) => string
 }
-
+ 
 const STAT_DEFS: { key: keyof Unit; label: string; desc: string; max: number }[] = [
   { key: 'hp', label: 'HP', desc: 'Total hit points before the unit is destroyed.', max: 10000 },
   { key: 'armour', label: 'Armour', desc: 'Damage reduction. Higher = tougher against all attacks.', max: 120 },
@@ -25,7 +26,7 @@ const STAT_DEFS: { key: keyof Unit; label: string; desc: string; max: number }[]
   { key: 'accuracy', label: 'Accuracy', desc: 'Base hit chance per shot (0-1). Affected by cover and upgrades.', max: 1 },
   { key: 'reload_time', label: 'Reload', desc: 'Seconds between shots. Lower = faster fire rate.', max: 10 },
 ]
-
+ 
 function StatRow({ statDef, unit, compareUnit }: {
   statDef: typeof STAT_DEFS[0]
   unit: Unit
@@ -33,19 +34,19 @@ function StatRow({ statDef, unit, compareUnit }: {
 }) {
   const val = unit[statDef.key] as number | null
   const cVal = compareUnit ? compareUnit[statDef.key] as number | null : null
-
+ 
   if (val == null && cVal == null) return null
-
+ 
   const pct = val != null ? Math.min((val / statDef.max) * 100, 100) : 0
   const cPct = cVal != null ? Math.min((cVal / statDef.max) * 100, 100) : 0
-
+ 
   const displayVal = statDef.key === 'accuracy' && val != null
     ? `${Math.round(val * 100)}%`
     : val ?? '—'
   const displayCVal = statDef.key === 'accuracy' && cVal != null
     ? `${Math.round(cVal * 100)}%`
     : cVal ?? '—'
-
+ 
   let delta = null
   if (val != null && cVal != null) {
     const diff = val - cVal
@@ -54,7 +55,7 @@ function StatRow({ statDef, unit, compareUnit }: {
     const better = costStats.includes(statDef.key as string) ? diff < 0 : diff > 0
     delta = { diff, better }
   }
-
+ 
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
@@ -79,24 +80,37 @@ function StatRow({ statDef, unit, compareUnit }: {
     </div>
   )
 }
-
-export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUnits, formatName, categoryColor }: Props) {
+ 
+export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUnits, formatName, categoryColor, getIconUrl }: Props) {
   const [showPicker, setShowPicker] = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
-
+ 
   const filteredPicker = allUnits.filter(u =>
     u.id !== unit.id &&
     u.unit_name.toLowerCase().includes(pickerSearch.toLowerCase())
   )
-
+ 
   return (
     <div style={{ maxWidth: 700 }}>
-
+ 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: categoryColor(unit.category) }} />
+            <div style={{ width: 36, height: 36, borderRadius: 6, background: '#f0f0f0', overflow: 'hidden', flexShrink: 0 }}>
+              {getIconUrl(unit) && (
+                <img
+                  src={getIconUrl(unit)}
+                  alt=""
+                  width={36}
+                  height={36}
+                  style={{ objectFit: 'cover' }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              )}
+            </div>
             <h2 style={{ fontSize: 18, fontWeight: 500, color: '#1a1a1a' }}>{formatName(unit.unit_name)}</h2>
             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: '#EEEDFE', color: '#3C3489' }}>{unit.category}</span>
           </div>
@@ -106,7 +120,7 @@ export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUni
             {unit.faction.replace(/_/g, ' ')}
           </div>
         </div>
-
+ 
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {compareUnit && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -152,7 +166,7 @@ export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUni
           </div>
         </div>
       </div>
-
+ 
       {/* Stats */}
       <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: 8, padding: '14px 16px', marginBottom: 12 }}>
         {compareUnit && (
@@ -166,7 +180,7 @@ export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUni
           <StatRow key={def.key as string} statDef={def} unit={unit} compareUnit={compareUnit} />
         ))}
       </div>
-
+ 
       {/* Power budget */}
       <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: 8, padding: '14px 16px' }}>
         <div style={{ fontSize: 11, fontWeight: 500, color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Power budget contribution</div>
@@ -184,7 +198,7 @@ export default function ComparePanel({ unit, compareUnit, setCompareUnit, allUni
           </div>
         ))}
       </div>
-
+ 
     </div>
   )
 }

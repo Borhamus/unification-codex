@@ -197,4 +197,4 @@ The Warhammer 40,000 universe belongs to Games Workshop. The Unification mod bel
 
 ---
 
-*In the grim darkness of the far future, there is only war — and now, there is data.*
+*In the grim darkness of the far future, there is only war — and now, there is a codex.*
